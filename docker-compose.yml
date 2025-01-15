@@ -2,25 +2,30 @@ version: "3.8"
 
 services:
     app:
-        image: php:8.2-fpm
-        container_name: laravel_app
-        working_dir: /var/www
+        build:
+            context: .
+            dockerfile: Dockerfile
+        container_name: laravel_docker
         volumes:
             - ./:/var/www
             - ./storage:/var/www/storage
         ports:
-            - "9000:9000"
+            - "9005:9000"
+        networks:
+            - laravel_network
 
     webserver:
         image: nginx:latest
         container_name: laravel_webserver
         ports:
-            - "80:80"
+            - "81:80"
         volumes:
             - ./:/var/www
             - ./docker/nginx:/etc/nginx/conf.d
         depends_on:
             - app
+        networks:
+            - laravel_network
 
     db:
         image: mysql:8.0
@@ -32,9 +37,15 @@ services:
             MYSQL_USER: laravel_user
             MYSQL_PASSWORD: laravel_password
         ports:
-            - "3306:3306"
+            - "3307:3306"
         volumes:
             - dbdata:/var/lib/mysql
+        networks:
+            - laravel_network
 
 volumes:
     dbdata:
+
+networks:
+    laravel_network:
+        driver: bridge
